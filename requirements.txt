@@ -1,0 +1,3 @@
+psycopg[binary]
+yfinance
+python-dotenv
