@@ -1,6 +1,8 @@
 from app.relay.publisher import publish
 from app.relay.repository import claim_pending, mark_delivered, mark_failed
+from app.core.logger import get_logger
 
+logger = get_logger(__name__)
 
 def run_relay():
     rows = claim_pending(limit=10)
@@ -10,17 +12,43 @@ def run_relay():
         return
 
     for (outbox_id, event_id, topic, payload, prev_attempts) in rows:
-        # attempts were incremented during claim, so current attempt is prev_attempts + 1
         attempt = prev_attempts + 1
 
         try:
+            logger.info(
+                "Publishing event",
+                extra={
+                    "event_id": event_id,
+                    "attempt": attempt,
+                    "topic": topic,
+                },
+            )
+
             publish(payload)
+
             mark_delivered(outbox_id)
-            print(f"✅ Delivered {event_id} (attempt {attempt})")
+
+            logger.info(
+                "Delivered event",
+                extra={
+                    "event_id": event_id,
+                    "attempt": attempt,
+                    "topic": topic,
+                },
+            )
+
         except Exception as e:
             mark_failed(outbox_id, attempt, str(e))
-            print(f"❌ Failed {event_id} (attempt {attempt}): {e}")
 
+            logger.error(
+                "Publish failed",
+                extra={
+                    "event_id": event_id,
+                    "attempt": attempt,
+                    "topic": topic,
+                    "error": str(e),
+                },
+            )
 
 if __name__ == "__main__":
     run_relay()
