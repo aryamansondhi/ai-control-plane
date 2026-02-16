@@ -8,8 +8,12 @@ import os
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+from typing import Final
 
+DATABASE_URL: Final[str] = os.getenv("DATABASE_URL") or ""
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is not set in environment")
 
 def fetch_market_data(symbol: str):
     ticker = yf.Ticker(symbol)
@@ -19,15 +23,22 @@ def fetch_market_data(symbol: str):
         raise ValueError("No market data returned")
 
     latest = data.iloc[-1]
+    timestamp = data.index[-1]
+
+    if hasattr(timestamp, "to_pydatetime"):
+        dt = timestamp.to_pydatetime()
+    else:
+        dt = datetime.utcnow()
+
+    dt = dt.replace(tzinfo=timezone.utc)
 
     return {
         "symbol": symbol,
         "price": float(latest["Close"]),
         "volume": int(latest["Volume"]),
         "currency": "USD",
-        "occurred_at": latest.name.to_pydatetime().replace(tzinfo=timezone.utc).isoformat()
+        "occurred_at": dt.isoformat()
     }
-
 
 def run_ingestion(symbol: str):
     raw_data = fetch_market_data(symbol)
