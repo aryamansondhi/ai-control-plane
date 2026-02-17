@@ -139,3 +139,42 @@ The relay now enforces safe retry semantics and prevents infinite retry loops.
 - Transition from **"Working system"** to **"Inspectable system"**
 
 The Control Plane now exposes deterministic operational signals.
+
+---
+
+## 📅 Day 37 — Metrics & Operational Observability
+
+**Focus:** Making system behavior externally measurable.
+
+### What was implemented
+
+- Integrated Prometheus client for runtime metrics
+- Created centralized metrics module:
+  - `events_published_total`
+  - `events_failed_total`
+  - `events_dead_lettered_total`
+- Instrumented relay worker:
+  - Success increments `events_published_total`
+  - Failure increments `events_failed_total`
+- Ensured metrics increment **after** state transition commits
+- Built FastAPI server exposing:
+  - `/health` endpoint
+  - `/metrics` endpoint (Prometheus-compatible)
+- Resolved multi-process metrics isolation by executing relay within API process
+- Validated counter increments under simulated publish failures
+
+### Architectural Outcome
+
+- System is now externally observable without direct database access
+- Runtime behavior is measurable via standard monitoring tools
+- Metrics accurately reflect delivery success and failure states
+- Foundation established for:
+  - Alerting
+  - Dashboards
+  - Latency instrumentation
+  - Production deployment readiness
+- Transition from **"Inspectable system"** to **"Monitorable system"**
+
+The Control Plane now emits operational signals that can be scraped, graphed, and alerted on.
+
+---

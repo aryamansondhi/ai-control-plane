@@ -1,6 +1,10 @@
 from app.relay.publisher import publish
 from app.relay.repository import claim_pending, mark_delivered, mark_failed
 from app.core.logger import get_logger
+from app.core.metrics import (
+    events_published,
+    events_failed,
+)
 
 logger = get_logger(__name__)
 
@@ -27,6 +31,7 @@ def run_relay():
             publish(payload)
 
             mark_delivered(outbox_id)
+            events_published.inc()
 
             logger.info(
                 "Delivered event",
@@ -34,11 +39,13 @@ def run_relay():
                     "event_id": event_id,
                     "attempt": attempt,
                     "topic": topic,
+                    
                 },
             )
 
         except Exception as e:
             mark_failed(outbox_id, attempt, str(e))
+            events_failed.inc()
 
             logger.error(
                 "Publish failed",
