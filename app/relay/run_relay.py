@@ -5,6 +5,8 @@ from app.core.metrics import (
     events_published,
     events_failed,
 )
+from app.core.metrics import publish_latency_seconds, events_dead_lettered
+import time
 
 logger = get_logger(__name__)
 
@@ -28,7 +30,10 @@ def run_relay():
                 },
             )
 
+            start = time.perf_counter()
             publish(payload)
+            duration = time.perf_counter() - start
+            publish_latency_seconds.observe(duration)
 
             mark_delivered(outbox_id)
             events_published.inc()
@@ -46,6 +51,8 @@ def run_relay():
         except Exception as e:
             mark_failed(outbox_id, attempt, str(e))
             events_failed.inc()
+            if attempt >= 5:
+                events_dead_lettered.inc()
 
             logger.error(
                 "Publish failed",

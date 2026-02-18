@@ -178,3 +178,32 @@ The Control Plane now exposes deterministic operational signals.
 The Control Plane now emits operational signals that can be scraped, graphed, and alerted on.
 
 ---
+
+## 📅 Day 38 — Latency Instrumentation & Performance Telemetry
+
+**Focus:** Measuring system performance, not just outcomes.
+
+### What was implemented
+
+- Added Prometheus `Histogram` for publish latency:
+  - `publish_latency_seconds`
+- Instrumented relay worker with high-precision timing:
+  - Used `time.perf_counter()` for accurate duration measurement
+  - Observed latency only on successful publish execution
+- Wired latency observation into publish lifecycle before state transition commit
+- Integrated `events_dead_lettered_total` metric increment on retry ceiling
+- Validated histogram bucket distribution under simulated 20ms publish delay
+- Confirmed counter and histogram behavior through `/metrics` endpoint
+
+### Architectural Outcome
+
+- System now exposes performance distribution, not just event counts
+- Publish duration is measurable across latency buckets
+- Control Plane supports:
+  - Performance monitoring
+  - SLO tracking
+  - Capacity planning insights
+- Dead-letter transitions are externally observable via metrics
+- Transition from **"Monitorable system"** to **"Performance-aware system"**
+
+The Control Plane now emits timing signals that enable real operational intelligence.

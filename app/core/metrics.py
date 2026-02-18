@@ -1,4 +1,9 @@
-from prometheus_client import Counter
+from prometheus_client import Counter, Histogram
+
+publish_latency_seconds = Histogram(
+    "publish_latency_seconds",
+    "Time taken to publish an event"
+)
 
 events_published = Counter(
     "events_published_total",
