@@ -17,3 +17,4 @@ Thumbs.db
 .vscode/
 *.log
 docker/postgres_data/
+ai_control_plane_convogpt.pdf
