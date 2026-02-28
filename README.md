@@ -207,3 +207,27 @@ The Control Plane now emits operational signals that can be scraped, graphed, an
 - Transition from **"Monitorable system"** to **"Performance-aware system"**
 
 The Control Plane now emits timing signals that enable real operational intelligence.
+
+---
+
+## 📅 Day 39 — Background Scheduler & Autonomous Relay
+
+**Focus:** Making the Control Plane self-operating.
+
+### What was implemented
+
+- Integrated `APScheduler` into the FastAPI process
+- Relay worker now executes automatically every 30 seconds
+- Scheduler starts on application boot and shuts down cleanly on exit
+- Manual `/run-relay` endpoint retained for on-demand triggering
+- Verified autonomous delivery cycle without manual intervention
+
+### Architectural Outcome
+
+- Control Plane no longer requires human triggers to process events
+- Relay operates as a continuous background service
+- Scheduler lifecycle is bound to FastAPI application lifecycle
+- Foundation established for fully autonomous event-driven execution
+- Transition from **"Infrastructure you operate"** to **"Infrastructure that operates itself"**
+
+The Control Plane now runs. Not when told to. Always.
