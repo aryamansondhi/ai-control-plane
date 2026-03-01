@@ -231,3 +231,28 @@ The Control Plane now emits timing signals that enable real operational intellig
 - Transition from **"Infrastructure you operate"** to **"Infrastructure that operates itself"**
 
 The Control Plane now runs. Not when told to. Always.
+
+---
+
+## 📅 Day 40 — Dead-Letter Inspection API
+
+**Focus:** Surfacing terminal failures without database access.
+
+### What was implemented
+
+- Added `GET /dead-letters` endpoint — lists all dead-lettered events
+- Added `GET /dead-letters/{event_id}` endpoint — full forensic detail on a specific failure
+- Queries join `outbox` and `events` tables to surface complete context:
+  - `event_id`, `trace_id`, `topic`, `entity_id`
+  - `delivery_attempts`, `last_error`, `dead_lettered_at`
+  - Full `payload_json`
+- Extended `repository.py` with `get_dead_letters()` and `get_dead_letter_by_id()`
+
+### Architectural Outcome
+
+- Terminal failures are now inspectable via API without touching the database
+- Full event lifecycle is traceable end-to-end through `trace_id`
+- Operators can identify, investigate, and act on dead-lettered events externally
+- Transition from **"Infrastructure that operates itself"** to **"Infrastructure that explains itself"**
+
+The Control Plane now surfaces its own failures.
