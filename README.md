@@ -256,3 +256,29 @@ The Control Plane now runs. Not when told to. Always.
 - Transition from **"Infrastructure that operates itself"** to **"Infrastructure that explains itself"**
 
 The Control Plane now surfaces its own failures.
+
+---
+
+## 📅 Day 41 — Event Lifecycle Trace Endpoint
+
+**Focus:** Full end-to-end event introspection via API.
+
+### What was implemented
+
+- Added `GET /events/{event_id}/trace` endpoint
+- Reconstructs the complete lifecycle of any event in a single API call:
+  - Canonical event record (`event_type`, `entity_id`, `occurred_at`, `payload`)
+  - Outbox delivery record (`delivery_attempts`, `next_attempt_at`, `delivered_at`, `dead_lettered_at`, `last_error`)
+  - `final_state` — `DELIVERED`, `DEAD_LETTERED`, or `PENDING`
+- `trace_id` surfaced at top level for cross-system correlation
+- Guard added for events with no outbox record
+- Extended `repository.py` with `get_event_trace()`
+
+### Architectural Outcome
+
+- Any event can be fully reconstructed without database access
+- Ingestion → delivery → failure chain is inspectable end-to-end
+- `trace_id` enables correlation across logs, metrics, and trace endpoint
+- Transition from **"Infrastructure that explains itself"** to **"Infrastructure that is fully introspectable"**
+
+The Control Plane now tells the complete story of every event.

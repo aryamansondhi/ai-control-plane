@@ -183,3 +183,103 @@ def get_dead_letter_by_id(event_id: str):
                 "occurred_at": r[8].isoformat(),
                 "trace_id": str(r[9]),
             }
+
+def get_event_trace(event_id: str):
+    with psycopg.connect(DATABASE_URL) as conn:
+        with conn.cursor() as cur:
+            # Get canonical event
+            cur.execute("""
+                SELECT
+                    event_id,
+                    event_type,
+                    source,
+                    entity_id,
+                    entity_type,
+                    occurred_at,
+                    ingested_at,
+                    schema_version,
+                    trace_id,
+                    payload_json
+                FROM events
+                WHERE event_id = %s
+            """, (event_id,))
+            event = cur.fetchone()
+            if not event:
+                return None
+
+            # Get raw payload
+            cur.execute("""
+                SELECT id, source, fetched_at, payload_json
+                FROM raw_payloads
+                WHERE source = %s
+                ORDER BY fetched_at ASC
+                LIMIT 1
+            """, (event[2],))
+            raw = cur.fetchone()
+
+            # Get outbox lifecycle
+            cur.execute("""
+                SELECT
+                    id,
+                    topic,
+                    delivery_attempts,
+                    next_attempt_at,
+                    delivered_at,
+                    dead_lettered_at,
+                    last_error,
+                    created_at
+                FROM outbox
+                WHERE event_id = %s
+            """, (event_id,))
+            outbox = cur.fetchone()
+
+            if not outbox:
+                return {
+                    "event_id": str(event[0]),
+                    "trace_id": str(event[8]),
+                    "final_state": "NO_OUTBOX_RECORD",
+                    "event": {
+                        "event_type": event[1],
+                        "source": event[2],
+                        "entity_id": event[3],
+                        "entity_type": event[4],
+                        "occurred_at": event[5].isoformat(),
+                        "ingested_at": event[6].isoformat(),
+                        "schema_version": event[7],
+                        "payload": event[9],
+                    },
+                    "outbox": None,
+                }
+
+            # Determine final state
+            if outbox[4]:
+                state = "DELIVERED"
+            elif outbox[5]:
+                state = "DEAD_LETTERED"
+            else:
+                state = "PENDING"
+
+            return {
+                "event_id": str(event[0]),
+                "trace_id": str(event[8]),
+                "final_state": state,
+                "event": {
+                    "event_type": event[1],
+                    "source": event[2],
+                    "entity_id": event[3],
+                    "entity_type": event[4],
+                    "occurred_at": event[5].isoformat(),
+                    "ingested_at": event[6].isoformat(),
+                    "schema_version": event[7],
+                    "payload": event[9],
+                },
+                "outbox": {
+                    "topic": outbox[1],
+                    "delivery_attempts": outbox[2],
+                    "next_attempt_at": outbox[3].isoformat() if outbox[3] else None,
+                    "delivered_at": outbox[4].isoformat() if outbox[4] else None,
+                    "dead_lettered_at": outbox[5].isoformat() if outbox[5] else None,
+                    "last_error": outbox[6],
+                    "created_at": outbox[7].isoformat(),
+                },
+            }
