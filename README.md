@@ -282,3 +282,31 @@ The Control Plane now surfaces its own failures.
 - Transition from **"Infrastructure that explains itself"** to **"Infrastructure that is fully introspectable"**
 
 The Control Plane now tells the complete story of every event.
+
+---
+
+## 📅 Day 42 — Dead-Letter Replay
+
+**Focus:** Closing the reliability loop — from inspection to action.
+
+### What was implemented
+
+- Added `POST /dead-letters/{event_id}/replay` endpoint
+- Requeues a dead-lettered event back into the outbox by resetting:
+  - `dead_lettered_at` → `NULL`
+  - `delivered_at` → `NULL`
+  - `delivery_attempts` → `0`
+  - `next_attempt_at` → `NOW()`
+  - `last_error` → `NULL`
+- Scheduler automatically picks up replayed events within 30 seconds
+- Guard added for events that are not dead-lettered
+- Extended `repository.py` with `replay_dead_letter()`
+
+### Architectural Outcome
+
+- Dead-lettered events are now recoverable without database access
+- Full reliability loop established: ingest → deliver → fail → inspect → replay
+- Operators can recover from failures via API after fixing underlying issues
+- Transition from **"Infrastructure that is fully introspectable"** to **"Infrastructure that is self-recoverable"**
+
+The Control Plane can now heal itself.

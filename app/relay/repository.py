@@ -283,3 +283,29 @@ def get_event_trace(event_id: str):
                     "created_at": outbox[7].isoformat(),
                 },
             }
+
+def replay_dead_letter(event_id: str):
+    with psycopg.connect(DATABASE_URL) as conn:
+        with conn.transaction():
+            with conn.cursor() as cur:
+                # Confirm it's actually dead-lettered
+                cur.execute("""
+                    SELECT id FROM outbox
+                    WHERE event_id = %s
+                    AND dead_lettered_at IS NOT NULL
+                """, (event_id,))
+                row = cur.fetchone()
+                if not row:
+                    return None
+
+                # Reset outbox record for redelivery
+                cur.execute("""
+                    UPDATE outbox
+                    SET dead_lettered_at = NULL,
+                        delivered_at = NULL,
+                        delivery_attempts = 0,
+                        next_attempt_at = NOW(),
+                        last_error = NULL
+                    WHERE event_id = %s
+                """, (event_id,))
+                return {"event_id": event_id, "status": "requeued"}

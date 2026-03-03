@@ -3,7 +3,7 @@ from fastapi.responses import Response
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.relay.run_relay import run_relay
-from app.relay.repository import get_dead_letters, get_dead_letter_by_id, get_event_trace
+from app.relay.repository import get_dead_letters, get_dead_letter_by_id, get_event_trace, replay_dead_letter
 
 app = FastAPI()
 
@@ -43,6 +43,13 @@ def event_trace(event_id: str):
     result = get_event_trace(event_id)
     if not result:
         return {"error": "Event not found"}
+    return result
+
+@app.post("/dead-letters/{event_id}/replay")
+def replay_dead_letter_endpoint(event_id: str):
+    result = replay_dead_letter(event_id)
+    if not result:
+        return {"error": "Event not found or not dead-lettered"}
     return result
 
 @app.on_event("shutdown")
