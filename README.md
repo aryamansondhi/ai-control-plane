@@ -310,3 +310,28 @@ The Control Plane now tells the complete story of every event.
 - Transition from **"Infrastructure that is fully introspectable"** to **"Infrastructure that is self-recoverable"**
 
 The Control Plane can now heal itself.
+
+---
+
+## 📅 Day 43 — Consumer Layer & Donna Integration
+
+**Focus:** Closing the loop — connecting Donna to the Control Plane.
+
+### What was implemented
+
+- Created `app/consumers/donna_wolf_consumer.py`
+- Implemented `get_latest_market_event(symbol)` — reads most recently delivered market event from the event store
+- Implemented `get_portfolio_snapshot(symbols)` — batch consumer for multiple symbols
+- Consumer queries join `events` and `outbox` tables, only reading successfully delivered events
+- Verified live consumption of AAPL market data via trace_id
+
+### Architectural Outcome
+
+- `consumers/` folder active for the first time since Day 32
+- Donna's Wolf no longer calls `yfinance` directly
+- Market data is now consumed from reliable, structured, traceable canonical events
+- Full pipeline is complete:
+  - `yfinance → ingestion → events → outbox → relay → consumer → Donna`
+- Transition from **"Infrastructure that is self-recoverable"** to **"Infrastructure with active consumers"**
+
+The Control Plane now has a downstream. The two systems are one.
