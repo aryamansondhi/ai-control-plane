@@ -3,7 +3,7 @@ from fastapi.responses import Response
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.relay.run_relay import run_relay
-from app.relay.repository import get_dead_letters, get_dead_letter_by_id, get_event_trace, replay_dead_letter
+from app.relay.repository import get_dead_letters, get_dead_letter_by_id, get_event_trace, replay_dead_letter, get_system_health
 
 app = FastAPI()
 
@@ -13,7 +13,15 @@ scheduler.start()
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    stats = get_system_health()
+    return {
+        "status": "ok",
+        "scheduler": "running" if scheduler.running else "stopped",
+        "pending_events": stats["pending_events"],
+        "dead_lettered_events": stats["dead_lettered_events"],
+        "delivered_events": stats["delivered_events"],
+        "last_delivered_at": stats["last_delivered_at"],
+    }
 
 @app.get("/metrics")
 def metrics():

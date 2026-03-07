@@ -335,3 +335,30 @@ The Control Plane can now heal itself.
 - Transition from **"Infrastructure that is self-recoverable"** to **"Infrastructure with active consumers"**
 
 The Control Plane now has a downstream. The two systems are one.
+
+---
+
+## 📅 Day 44 — System Status Endpoint
+
+**Focus:** Turning `/health` into a genuine operational dashboard.
+
+### What was implemented
+
+- Upgraded `/health` from a simple ping to a full system status response
+- Exposes real-time system state:
+  - `scheduler` — running or stopped
+  - `pending_events` — events waiting for delivery
+  - `dead_lettered_events` — terminal failures awaiting inspection
+  - `delivered_events` — successfully processed events
+  - `last_delivered_at` — timestamp of most recent delivery
+- Extended `repository.py` with `get_system_health()`
+- Single endpoint gives complete operational picture without database access
+
+### Architectural Outcome
+
+- System state is immediately readable by any operator or monitoring tool
+- Health check reflects real delivery pipeline state, not just process liveness
+- Pairs with `/metrics`, `/dead-letters`, and `/events/{id}/trace` to form complete observability surface
+- Transition from **"Infrastructure with active consumers"** to **"Infrastructure with operational visibility"**
+
+The Control Plane now tells you exactly how it's doing.

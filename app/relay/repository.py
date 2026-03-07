@@ -309,3 +309,32 @@ def replay_dead_letter(event_id: str):
                     WHERE event_id = %s
                 """, (event_id,))
                 return {"event_id": event_id, "status": "requeued"}
+
+def get_system_health():
+    with psycopg.connect(DATABASE_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    COUNT(*) FILTER (WHERE delivered_at IS NOT NULL) AS delivered,
+                    COUNT(*) FILTER (WHERE dead_lettered_at IS NOT NULL) AS dead_lettered,
+                    COUNT(*) FILTER (
+                        WHERE delivered_at IS NULL
+                        AND dead_lettered_at IS NULL
+                    ) AS pending,
+                    MAX(delivered_at) AS last_delivered_at
+                FROM outbox
+            """)
+            row = cur.fetchone()
+            if not row:
+                return {
+                    "delivered_events": 0,
+                    "dead_lettered_events": 0,
+                    "pending_events": 0,
+                    "last_delivered_at": None,
+                }
+            return {
+                "delivered_events": row[0],
+                "dead_lettered_events": row[1],
+                "pending_events": row[2],
+                "last_delivered_at": row[3].isoformat() if row[3] else None,
+            }
