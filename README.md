@@ -362,3 +362,29 @@ The Control Plane now has a downstream. The two systems are one.
 - Transition from **"Infrastructure with active consumers"** to **"Infrastructure with operational visibility"**
 
 The Control Plane now tells you exactly how it's doing.
+
+---
+
+## 📅 Day 45 — Unified Operational Dashboard
+
+**Focus:** Making the Control Plane demoable in 10 seconds.
+
+### What was implemented
+
+- Added `GET /dashboard` endpoint serving a live HTML operational dashboard
+- Displays real-time system state:
+  - Scheduler status (running/stopped)
+  - Delivered, pending, and dead-lettered event counts
+  - Last delivered timestamp
+  - Dead letters table with symbol, attempts, error, and timestamp
+- Auto-refreshes every 30 seconds — matching scheduler interval
+- No external framework — pure FastAPI HTML response
+
+### Architectural Outcome
+
+- Complete system state visible in a single browser tab
+- Non-technical stakeholders can understand system health instantly
+- Pairs with `/health`, `/metrics`, `/dead-letters`, and `/events/{id}/trace`
+- Transition from **"Infrastructure with operational visibility"** to **"Infrastructure that speaks for itself"**
+
+The Control Plane now has a face.
