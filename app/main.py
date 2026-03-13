@@ -4,6 +4,7 @@ from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.relay.run_relay import run_relay
 from app.relay.repository import get_dead_letters, get_dead_letter_by_id, get_event_trace, replay_dead_letter, get_system_health
+from app.ingestion.run_ingestion import run_ingestion
 
 app = FastAPI()
 
@@ -145,6 +146,11 @@ def dashboard():
     </body>
     </html>
     """
+
+@app.post("/ingest")
+def ingest(symbols: list[str]):
+    results = run_ingestion(symbols)
+    return {"ingested": results}
 
 @app.on_event("shutdown")
 def shutdown_event():

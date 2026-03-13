@@ -388,3 +388,49 @@ The Control Plane now tells you exactly how it's doing.
 - Transition from **"Infrastructure with operational visibility"** to **"Infrastructure that speaks for itself"**
 
 The Control Plane now has a face.
+
+---
+
+## 📅 Day 46 — Multi-Symbol Ingestion & Ingest API
+
+**Focus:** Evolving ingestion from single-symbol script to API-driven pipeline.
+
+### What was implemented
+
+- Refactored `run_ingestion.py` to accept a list of symbols
+- Each symbol ingested independently with its own `event_id` and `trace_id`
+- Failures per symbol are isolated — one bad symbol doesn't block others
+- Added `POST /ingest` endpoint accepting a JSON array of symbols
+- Ingestion now fully API-driven — no terminal scripts required
+
+### Architectural Outcome
+
+- Control Plane ingests a full portfolio in a single API call
+- Each symbol produces an independent, traceable canonical event
+- Pipeline is now: `API call → multi-symbol ingestion → events → outbox → relay → consumer`
+- Dashboard delivery counts reflect multi-symbol processing in real time
+- Transition from **"Infrastructure that speaks for itself"** to **"Infrastructure that accepts commands"**
+
+The Control Plane is now API-driven end to end.
+
+---
+
+## 📅 Day 47 — Test Suite
+
+**Focus:** Proving reliability claims with evidence.
+
+### What was implemented
+
+- Created `tests/test_ingestion.py` — 3 tests covering market data fetch, empty data handling, and atomic triple write
+- Created `tests/test_relay.py` — 4 tests covering no-op relay, successful delivery, failed delivery, and multi-event processing
+- Created `tests/test_repository.py` — 6 tests covering mark delivered, retry scheduling, dead-lettering, empty results, formatted results, and missing event trace
+- All database and transport calls mocked — tests run without Docker or network
+- Full suite: 13 tests, 0 failures, 0.77s
+
+### Architectural Outcome
+
+- Every reliability claim in the system is now backed by a test
+- Suite runs without infrastructure dependencies
+- Transition from **"Infrastructure that accepts commands"** to **"Infrastructure that proves its own correctness"**
+
+13 passed. 0 failed.
