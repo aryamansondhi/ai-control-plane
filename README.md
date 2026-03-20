@@ -460,3 +460,29 @@ docker compose -f docker/docker-compose.yml up
 - Transition from **"Infrastructure that proves its own correctness"** to **"Infrastructure that ships"**
 
 The Control Plane now runs anywhere.
+
+---
+
+## 📅 Day 49 — Architecture Diagram
+
+**Focus:** Making the system legible to anyone who opens the repo.
+
+### What was implemented
+
+- Rewrote `docs/architecture.md` from scratch
+- Added full Mermaid flowchart covering:
+  - Ingestion → atomic triple write → Storage
+  - APScheduler → Relay Worker → delivery/retry/dead-letter lifecycle
+  - Consumer layer → Donna
+  - Complete API surface with all endpoints
+  - Observability and Storage subgraphs
+- Added component responsibilities, data flow summary, and stack table
+- Renders natively on GitHub — no external tools required
+
+### Architectural Outcome
+
+- Any engineer can understand the full system without reading code
+- Repo now presents as a designed system, not just a collection of files
+- Transition from **"Infrastructure that ships"** to **"Infrastructure that communicates itself"**
+
+The Control Plane now explains itself before you read a line of code.
